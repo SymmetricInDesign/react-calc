@@ -51,7 +51,6 @@ input{
     border-top: 1px solid lightgray;
     p{
         margin: 0;
-        // margin-top: 10px;
     }
 }
 
@@ -62,7 +61,6 @@ input{
     cursor: pointer;
     transition: background-color 0.4s;
     text-align: center;
-    // padding-top: 10px;
     font-size: 18px;
     font-weight: 700;
     display:flex;
@@ -79,7 +77,6 @@ input{
     flex-direction: row;
     flex-grow: 3;
     .digit{
-        // width: 33.33%;
         flex-basis: 33.3%;
         height: 20%;
     }
@@ -91,13 +88,7 @@ input{
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
-    // flex: 19% 3 0;
-    // max-height: 400px;
     .operation{
-        // flex-grow: 1;
-        // width: 50%;
-        // height: 19%;
-
         flex-basis: 20%;
     }
 }
