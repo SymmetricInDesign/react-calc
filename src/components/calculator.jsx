@@ -1,17 +1,18 @@
 import React from 'react'
 import OperationIndicator from './operation_indicator'
+import DigitsContainer from './digits_container'
+import OperationsContainer from './operations'
 import * as MyMath from '../util/my_math.js' 
 
 class Calculator extends React.Component{
     constructor(){
         super()
-        console.log(MyMath)
-        this.standAloneOperations = new Set(['sqrt', 'fact', 'sin', 'cos', 'tan', 'arcsin', 'arccos', 'arctan'])
         this.state = {
             result: "",
             current: "",
             operation: ""
         }
+
         this.updateCurrentNumber = this.updateCurrentNumber.bind(this)
         this.updateOperation = this.updateOperation.bind(this)
         this.updateResult = this.updateResult.bind(this)
@@ -22,49 +23,39 @@ class Calculator extends React.Component{
         this.changeSign = this.changeSign.bind(this)
     }
 
-    updateResult(result, operation = this.state.operation){
-        console.log(result)
-        if (isNaN(result) && typeof result === 'string' && result.includes("Error")){
-            this.setState({result: result, current: "", operation: ""})
-            return
-        }
-        const input = `${result}`
-        result = parseFloat(result) 
-        if (isNaN(result)) result = 1
-        if (input.includes("π")) result*=Math.PI
-        if (input.includes("e")) result*=Math.E
-        if (Math.abs(result) < 0.0000000000001) result = 0
-        this.setState({result: result, current: "", operation: operation})
-    }
-
+    //handles equals button presses and operation chains
     submit( e, newOperation = "" ){
         //if either res or current is empty, do nothing as there is no operation to make.
-        const {current, operation} = this.state
-        let {result} = this.state
-        if (current === "-") return
+        const { current, operation } = this.state
+        let { result } = this.state
+        //do nothing if only entered character is "-" or either display field is empty as there is no operation to make
+        if ( current === "-" ) return
+        if ( current === "" || result === "" ) return
 
-        if (current === "" || result === "") return
+        //parse current display and account for constants
         result = parseFloat(result)
         let operand = parseFloat(current) 
-        if (isNaN(operand)) operand = 1
-        if (current.includes("π")) operand*=Math.PI
-        if (current.includes("e")) operand*=Math.E
-        switch (operation){
+        if ( isNaN(operand) ) operand = 1
+        if ( current.includes("π") ) operand*=Math.PI
+        if ( current.includes("e") ) operand*=Math.E
+
+        switch ( operation ){
             case '+':
-                this.updateResult(operand+result, newOperation ? newOperation : "")
+                this.updateResult( operand+result, newOperation ? newOperation : "" )
                 break
             case '-':
-                this.updateResult(result - operand, newOperation ? newOperation : "")
+                this.updateResult( result - operand, newOperation ? newOperation : "" )
                 break
             case 'x':
-                this.updateResult(result * operand, newOperation ? newOperation : "")
+                this.updateResult( result * operand, newOperation ? newOperation : "" )
                 break
             case '÷':
-                if (operand === 0) {
-                    this.updateResult("Divide By Zero Error")
+                //pass divide by zero error to display
+                if ( operand === 0 ) {
+                    this.updateResult( "Divide By Zero Error" )
                     break
                 }
-                this.updateResult(result / operand, newOperation ? newOperation : "")
+                this.updateResult( result / operand, newOperation ? newOperation : "" )
                 break
             default:
                 return
@@ -73,22 +64,26 @@ class Calculator extends React.Component{
 
     }
 
+    //unlike operations, these functions act on only one input, defaulting to the current input but also being able 
+    //to be used on the last result if there is no current input.
     executeStandaloneOperation(e){
         const operation = e.target.textContent
         const {current, result} = this.state
         if (current === "-" || (current.length < 1 && !result)) return
         let operand
+        //if there is a current input, parse float and account for constants
         if (current){
             operand = parseFloat(current) 
             if (isNaN(operand)) operand = 1
             if (current.includes("π")) operand*=Math.PI
             if (current.includes("e")) operand*=Math.E
+        //else, operate on result, which will always be a float under intended use
         }else{
-            console.log(result)
             if (isNaN(result)) return
             operand = parseFloat(result)
         }
 
+        //check which button was clicked and execute function accordingly
         switch (operation){
             case 'sqrt':
                 this.updateResult(Math.sqrt(operand))
@@ -134,12 +129,14 @@ class Calculator extends React.Component{
     }
 
     updateCurrentNumber(e){
-        const {current, operation} = this.state
+        const { current, operation } = this.state
         const noOp = operation === "" ? true : false
         const digit = e.target.textContent
+
         //don't add pi or e if last character is decimal point
         if (current.charAt(current.length-1) === '.' && (digit==='π' || digit === 'e')) return
 
+        //clear result if beginning a new input (not chaining operations between inputs)
         if (noOp && current === "") this.setState({ current: digit, result: "" })
 
         //ensure that constants only appear max once each and only at the end of the string
@@ -153,7 +150,8 @@ class Calculator extends React.Component{
     }
 
     changeSign(e){
-        let {current} = this.state 
+        //change sign or add - sign if no current characters
+        let { current } = this.state 
         if (current.charAt(0) !== "-"){
             this.setState({ current: "-" + current })
         }else{
@@ -163,8 +161,7 @@ class Calculator extends React.Component{
 
     updateOperation(e){
         // if result is empty
-        const {result, current, operation} = this.state
-        console.log(current)
+        const { result, current } = this.state
         if (typeof result === 'string' && result.includes("Error")) {
             this.setState({ result: "", current: "", operation: "" })
             return
@@ -188,77 +185,69 @@ class Calculator extends React.Component{
                 this.submit( "" , e.target.textContent)
             }else{
                 //set new operation state, do nothing else.
-                this.setState({operation: e.target.textContent})
+                this.setState({ operation: e.target.textContent })
             }
         }
     }
 
+    //update result display upon submission of operation or function
+    updateResult( result, operation = this.state.operation ){
+        //handle error string outputs from functions and operations, such as divide by zero
+        if (isNaN(result) && typeof result === 'string' && result.includes("Error")){
+            this.setState({ result: result, current: "", operation: "" })
+            return
+        }
+        //convert strings containing constants to floats
+        const input = `${result}`
+        result = parseFloat(result) 
+        if (isNaN(result)) result = 1
+        if (input.includes("π")) result*=Math.PI
+        if (input.includes("e")) result*=Math.E
+        if (Math.abs(result) < 0.0000000000001) result = 0
+        this.setState({ result: result, current: "", operation: operation })
+    }
+
     clear(){
-        this.setState({
-            result: "",
-            current: "",
-            operation: "",
-        })
+        this.setState({ result: "", current: "", operation: "" })
     }
 
     backspace(){
+        //delete one character from current
         this.setState({current: this.state.current.substr(0,this.state.current.length-1)})
     }
 
     render(){
-
         return (
-                <div id="calculator">
-                    <h2>Calculator</h2>
-                    <div id="display">
-                        <input type="text" value={this.state.result} readOnly/>
-                        <input type="text" value={this.state.current} readOnly/>
-                        <OperationIndicator operation={this.state.operation}/>
-                    </div>
-                    <div id="controls-container">
-                        <div id="digits">
-                            <div className="digit button" onClick={this.updateCurrentNumber}><p>7</p></div>
-                            <div className="digit button" onClick={this.updateCurrentNumber}><p>8</p></div>
-                            <div className="digit button" onClick={this.updateCurrentNumber}><p>9</p></div>
-                            <div className="digit button" onClick={this.updateCurrentNumber}><p>4</p></div>
-                            <div className="digit button" onClick={this.updateCurrentNumber}><p>5</p></div>
-                            <div className="digit button" onClick={this.updateCurrentNumber}><p>6</p></div>
-                            <div className="digit button" onClick={this.updateCurrentNumber}><p>1</p></div>
-                            <div className="digit button" onClick={this.updateCurrentNumber}><p>2</p></div>
-                            <div className="digit button" onClick={this.updateCurrentNumber}><p>3</p></div>
-                            <div className="digit button" onClick={this.updateCurrentNumber}><p>0</p></div>
-                            <div className="digit button" onClick={this.updateCurrentNumber}><p>.</p></div>
-                            <div className="digit button" onClick={this.submit}><p>=</p></div>
-                            <div className="digit button" onClick={this.updateCurrentNumber}><p>π</p></div>
-                            <div className="digit button" onClick={this.updateCurrentNumber}><p>e</p></div>
-                            <div className="digit button" onClick={this.changeSign}><p>(-)</p></div>
-                            <div className="digit button"><p></p></div>
-                        </div>
-                        <div id="operations">
-                            <div className="operation button" onClick={this.clear}><p>CE</p></div>
-                            <div className="operation button" onClick={this.updateOperation}><p>÷</p></div>
-                            <div className="operation button" onClick={this.updateOperation}><p>x</p></div>
-                            <div className="operation button" onClick={this.updateOperation}><p>+</p></div>
-                            <div className="operation button" onClick={this.updateOperation}><p>-</p></div>
-                            <div className="operation button" onClick={this.backspace}><p>del</p></div>
-                            <div className="operation button" onClick={this.executeStandaloneOperation}><p>sqrt</p></div>
-                            <div className="operation button" onClick={this.executeStandaloneOperation}><p>sin</p></div>
-                            <div className="operation button" onClick={this.executeStandaloneOperation}><p>cos</p></div>
-                            <div className="operation button" onClick={this.executeStandaloneOperation}><p>tan</p></div>
-                            <div className="operation button" onClick={this.backspace}><p>del</p></div>
-                            <div className="operation button" onClick={this.executeStandaloneOperation}><p>!</p></div>
+            <div id="calculator">
 
-                            <div className="operation button" onClick={this.executeStandaloneOperation}><p>arcsin</p></div>
-                            <div className="operation button" onClick={this.executeStandaloneOperation}><p>arccos</p></div>
-                            <div className="operation button" onClick={this.executeStandaloneOperation}><p>arctan</p></div>
-                            <div className="operation button" onClick={this.backspace}><p>del</p></div>
+                <h2>Calculator</h2>
 
-                            <div className="operation button" onClick={this.executeStandaloneOperation}><p>ln</p></div>
-                            <div className="operation button" onClick={this.executeStandaloneOperation}><p>log</p></div>
-                        </div>
-                    </div>
+                <div id="display">
+                    <input type="text" value={ this.state.result } readOnly/>
+                    <input type="text" value={ this.state.current } readOnly/>
+                    <OperationIndicator operation={ this.state.operation }/>
                 </div>
-            )
+            
+                <div id="controls-container">
+
+                    {/* digits, constants, and other characters */}
+                    <DigitsContainer 
+                        updateCurrentNumber = { this.updateCurrentNumber }
+                        changeSign = { this.changeSign }
+                    />
+                
+                    {/* operations and functions */}
+                    <OperationsContainer 
+                        submit = { this.submit }
+                        clear = { this.clear } 
+                        updateOperation = { this.updateOperation }
+                        backspace={ this.backspace }
+                        executeStandaloneOperation={ this.executeStandaloneOperation }
+                    />
+
+                </div>
+            </div>
+        )
     }
 
 
