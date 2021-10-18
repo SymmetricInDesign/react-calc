@@ -57,6 +57,8 @@ class Calculator extends React.Component{
                 }
                 this.updateResult( result / operand, newOperation ? newOperation : "" )
                 break
+            case '^':
+                this.updateResult( result**operand, newOperation ? newOperation : "" )
             default:
                 return
         }
