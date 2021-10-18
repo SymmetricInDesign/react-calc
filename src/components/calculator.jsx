@@ -76,7 +76,7 @@ class Calculator extends React.Component{
     executeStandaloneOperation(e){
         const operation = e.target.textContent
         const {current, result} = this.state
-        if (current === "-" || current.length < 1) return
+        if (current === "-" || (current.length < 1 && !result)) return
         let operand
         if (current){
             operand = parseFloat(current) 
@@ -84,6 +84,7 @@ class Calculator extends React.Component{
             if (current.includes("π")) operand*=Math.PI
             if (current.includes("e")) operand*=Math.E
         }else{
+            console.log(result)
             if (isNaN(result)) return
             operand = parseFloat(result)
         }
